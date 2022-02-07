@@ -1,0 +1,158 @@
+---
+title: "Paper 1"
+author: "Hongyu Lei 1006662470"
+date: "Februrary 2, 2022"
+output:
+  pdf_document:
+    latex_engine: xelatex
+abstract: "This report collects Key indicators data in Torontos dashboard from City of Toronto divisions and agencies, who mainly providing the city services in wide range. And, it is available for public through the Toronto's Dashboard application, and founding on Toronto Progress Portal. Since the dataset covers a large range of categories and shares the information, which about Community Vulnerability, Crime, Development & Construction, Economy, Revenue and Services. There are also many other City of Toronto service divisions providing supports on contribution of Toronto dashboard. According to the Torontos dashboard dataset, the public could estimate the trends and direction of key indicators for Toronto and City of Toronto services. As the main publisher, City Manager Office collects the Key indicators since 2007 and daily refreshed. The reported Toronto dashboard Key indicators dataset analyzed in this report was obtained in csv format from the City of Toronto Open Data Portalusing the R package @opendatatoronto. The dataset was last update on February 6, 2022."
+bibliography: ref_list.bib
+subtitle: STA304 - Paper1
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(kableExtra)
+library(opendatatoronto)
+library(dplyr)
+
+# get package
+package <- show_package("5da38b38-d06e-4d0e-89e1-9ff753388754")
+package
+
+# get all resources for this package
+resources <- list_package_resources("5da38b38-d06e-4d0e-89e1-9ff753388754")
+
+# identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+
+# load the first datastore resource as a sample
+data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+data
+```
+
+## Introduction
+The dataset contains information on Key indicator data from City of Toronto divisions and agencies, which provides suggestions for the entire Toronto future development trend and direction @Toronto_Dashboard_Key_Indicators. The purpose of different vital indicators is to collect, analyze, and present on Toronto's Dashboard to give valuable tips related to the city services to the City of Toronto @Toronto_Dashboard. Those data are grouped into the following categories, Community Vulnerability, Crime, Development and Construction, Economy, Revenue, and Services. Since Toronto's Dashboard contains various categories of critical indicators, the data collection receives much contributing support from unfamiliar City of Toronto agencies and divisions @Toronto_Dashboard_Key_Indicators. Due to there being six types of Key indicators, the dataset has to collect through various avenues, such as Children's Services, City Planning, Court Services, Daily Bread Food Bank, Economic Development & Culture, Municipal Licensing & Standards, Parks, Forestry & Recreation, Revenue Services, Shelter, Support & Housing Administration, Solid Waste Management Services, Toronto Building, Toronto Police Service, Toronto Public Library, and Toronto Transit Commission. The different divisions and agencies of the City of Toronto daily collect corresponding data @Toronto_Dashboard_Key_Indicators. Toronto's dashboard application and the City of Toronto do not display all the details on collection for those service agencies collecting data.
+The data is refreshing every day on Toronto's dashboard, so it contains the most recent and previous data since 2007 @Toronto_Dashboard. By comparing the earlier data with the current data, the service apartment can quickly determine which areas have been improved and which areas still need to be improved and corrected after one year's efforts @Toronto_Dashboard. As a result, City of Toronto agencies can summarize more effective and new methods when planning the direction of the following year. However, during the COVID-19 pandemic, the indicators were severely impacted @Toronto_Dashboard. Thus, the measured value for each indicators could influence the Judgment of future direction. As an application, the advantage of Toronto's dashboard is that it only provides this service to the public, so the publisher does not express or imply any subjective assumptions and warranties about the data through the application. In addition, the dashboard does not publish any representations or endorsements. The Toronto Progress Portal is making efforts to update the application daily, while daily additions are being effectively recorded. However, while the services record the transactions, errors sometimes happen. Also, the integration of information and data sometimes takes a lot of time, so services sometimes experience delays in aggregating data reports. Thus the temporal accuracy of the data will be biased @Toronto_Dashboard_Key_Indicators. The dataset's population mainly targeted is the entire Toronto citizen since the six types of key indicators covered all the City of Toronto's services. Those data recorded which service agency measured what types of service and its measure value.
+
+\newpage
+
+## Clean Data
+
+The critical indicator dataset contains aggregate data of all service cases reported to the City of Toronto between 2007 and 2021 @Toronto_Dashboard_Key_Indicators.
+There were 8751 observations in the dataset and 17 attributes: _id, measure_id, measure_name, interval_type, value_type, measure_value, year_to_date_variance, budget_variance, decimal_accuracy, desired_direction, category, data_source_notes, city_perspective_note, year, period_number_in_year, target, note. The first two attributes _id and measure_id, were identical numerical identifiers removed before analyzing an additional attribute. Since there is no need to use all kinds of variables to analyze, we only select six of the variables, which are measure_name,measure_value, category,desired_direction, year,period_number_in_year. The categories of key indicators were aggregated by community vulnerability, crime, development & construction, economy, revenue, service. A sample of the dataset is displayed below. 
+
+```{r, echo=FALSE}
+key_indicators <- data %>%
+  select(measure_name,measure_value,category,desired_direction,year,period_number_in_year) %>% 
+  na.omit(data) %>% 
+  filter(desired_direction != "None")  
+head(key_indicators)
+```
+\newpage
+
+## Category
+
+The category variable contains information on the type of key indicators published on the Toronto dashboard application. The data set lists six main service categories that the City of Toronto provides: Community Vulnerability, Crime, Development & Construction, Economy, Revenue, and Services. The Figure below displays the distribution of measure values of different categories.
+
+```{r, echo=FALSE}
+key_indicators %>% ggplot(aes(x = year, y = measure_value,color = category)) + geom_point() + theme_classic()+
+labs(x = "Year", y = "Measur value", title = "Key Indicators Have The Highest Measure Value In Different Categories")
+```
+
+Across all 13 years, the Economy indicator has the highest measure value out of all the categories of key indicators. It shows a downwards trend between the year 2007 to the year 2009. The economic indicator has also demonstrated the most significant increase in the report, particularly between 2010 to 2017. But there is also a slight decrease from 2017 until nowadays. It could suggest that the highest measure value of economy indicators states the most suggestions for Toronto's future economic development trend and direction. Besides the economic indicators, development indicators would be the second-highest indicators, and it shows a gradual increase over the years. Only measure the value of service indicators that appear on the dataset, the most negligible measured value for the remaining categories. 
+
+\newpage
+
+## Toronto Economy in 2021
+
+As the report mentioned above, the economic indicator has the highest measure value over 13 years. However, due to the Covid-19 pandemic, the Provincial Government has taken emergency action and orders province-wide since March 2020 @Toronto_Dashboard. Moves that deal with the pandemic cause many business and labor market limitations. In September 2021， the government lost restrictions on the economy, allowing more businesses to open up. So overall, labor market conditions have improved, and employment has improved @Toronto_Dashboard.
+
+```{r, echo=FALSE}
+Economy_2021 <- key_indicators %>% 
+  select(measure_value,category,year,period_number_in_year) %>% 
+  filter(category == "Economy", year == 2020) %>% 
+  mutate(month = case_when(
+    period_number_in_year == 1 ~ "1-Jan",
+    period_number_in_year == 2 ~ "2-Feb",
+    period_number_in_year == 3 ~ "3-Mar",
+    period_number_in_year==4 ~ "4-Apr", 
+    period_number_in_year==5 ~ "5-May",
+    period_number_in_year==6 ~ "6-Jun",
+    period_number_in_year==7 ~ "7-Jul",
+    period_number_in_year==8 ~ "8-Aug",
+    period_number_in_year==9 ~ "9-Sept",
+    period_number_in_year==10 ~ "a_Oct",
+    period_number_in_year==11 ~ "b_Nov", 
+    period_number_in_year==12 ~ "c_Dec")) %>% 
+  arrange(month) 
+```
+
+```{r, echo=FALSE}
+Economy_2021 %>% ggplot(aes(x = month, y = measure_value)) + geom_point() + labs(x = "Month", y = "Measure Value", title = "Economy Measure Value Change In 2021")
+```
+
+Toronto’s Dashboard provides the most data analysis sections about the economy in 2021. The dataset provides the measured value from January to December twice a month. In 2021, the measured value of the economy had been flat, even with slight rises and falls. There is a slight increase in the first quarter in the last year. The measured value of the economic indicator in January($1.5*10^{10}$) reached ($1.65*10^{10}$) at the end of the first quarter. However, there is a significant decrease in April ($8*10^9$), which is the beginning of the second quarter, and slightly increased in May ($1*10^{10}$). At the end of the second quarter, the measured value back to the beginning of the year ($1.5*10^{10}$). For the third and start of the fourth quarter, there is a slight increase and peaked in October ($1.7*10^{10}$). During the fourth quarter, it shows a slightly downward trend. At the end of the fourth quarter, the measured value reached ($1.5*10^{10}$). These are all the data provided by Toronto’s Dashboard in 2021
+
+\newpage
+
+## Compare Economy and Revenue
+
+Before the Covid-19, economic indicators and revenue indicators could provide an overview of the economic growth and the daily income and consumption of citizens @Toronto_Dashboard.
+
+```{r, echo=FALSE}
+Economy_Revenue_2019 <- key_indicators %>% 
+  select(measure_value,category,year,period_number_in_year,desired_direction) %>% 
+  filter(category == "Economy"| category == "Revenue")%>%
+  filter(year == 2019)
+```
+
+```{r, echo=FALSE}
+Economy_Revenue_2019 %>% filter(!is.na(desired_direction)) %>%
+ggplot(aes(x= category, fill = desired_direction)) + geom_bar() + theme_classic()+
+geom_text(stat = 'count',aes(label =..count.., vjust =-2))+
+labs(x = "Category", y = "Measure value", title = "Measure Value Of Economy And Revenue")
+```
+
+Note that the year refers to the indicator was 2019. The dataset collected by the city of Toronto was before the Covid-19. Based on the figure, generally speaking, there are more cases in the Economy than Revenue neither desired-direction of up nor down. More specifically, both cases of upwards trend and downwards trend about Economy is more than Revenue cases. The variable of desire-direction demonstrates the direction of the trend arrow as it is a comparison of numerical data between this year and the previous year. The economy and revenue indicators were both having more cases of a downward trend. The upwards cases of Economy takes 25% off entire Economy cases, and The upwards cases of Revenue takes 23.07% of entire Revenue cases. Thus, there are more downwards cases in 2019 compared to 2018. According to the estimate of the desired-direction cases rate based on the data provided in the data set, we should interpret with caution because of many uncertainties, such as the epidemic. It is impossible to tell whether there will be as many cases of a downward trend next year. And it is not certain that the number of income cases will still be less than the number of economic cases.
+
+\newpage
+
+## Table
+
+Key indicators are further broken up into subtypes based on the six main category indicators. Table 1 lists the minimal, maximal, Q1, Q3, standard deviation, small outliers and large outliers’ indicators measure value. 
+
+```{r, echo=FALSE}
+summary_table_1 <- key_indicators %>%
+  filter(!is.na(measure_value)) %>%
+  group_by(category) %>% 
+  summarise(min = min(measure_value),
+            median = median(measure_value),
+            max = max(measure_value),
+            mean = mean(measure_value),
+            sd = sd(measure_value),
+            )
+
+knitr::kable(summary_table_1)
+```
+
+```{r, echo=FALSE}
+summary_table_2 <- key_indicators %>%
+  filter(!is.na(measure_value)) %>%
+  group_by(category) %>% 
+  summarise(Q1 = quantile(measure_value,0.25),
+            Q3 = quantile(measure_value,0.75),
+            IQR = Q3 - Q1,
+            Small_Outliers = sum(measure_value < Q1 - 1.5*IQR),
+            Large_Outliers = sum(measure_value > Q3 + 1.5*IQR))
+
+knitr::kable(summary_table_2)
+```
+
+\newpage
+
+## Reference
+
+
